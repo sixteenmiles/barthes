@@ -22,14 +22,17 @@ client.on('message', message => {
 
     if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/g);
-    const commandName = args.shift().toLowerCase();
+    const matches = /^\!(\w+)\s*(.*)$/.exec(message.content);
 
-    if (!client.commands.has(commandName)) return;
+    if (!matches) return;
+
+    const [_, commandName, args] = matches;
 
     const command = client.commands.get(commandName);
 
-    if (command.args && !args.length) {
+    if (!command) return;
+
+    if (command.args && !args) {
         return message.channel.send("You didn't provide any arguments.");
     }
 
