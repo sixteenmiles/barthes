@@ -3,10 +3,10 @@ module.exports = {
 	description: 'This is a test command that returns the arguments provided. It will be removed soon.',
     args: true,
     execute(message, args) {
-		if (args[0] === 'foo') {
+		if (args === 'foo') {
 			return message.channel.send('bar');
 		}
 
-		message.channel.send(`Arguments: ${args}\nArguments length: ${args.length}`);
+		message.channel.send(`Arguments: ${args}`);
 	},
 };

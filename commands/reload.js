@@ -2,8 +2,8 @@ module.exports = {
 	name: 'reload',
 	description: 'Reloads a command',
 	execute(message, args) {
-		if (!args.length) return message.channel.send(`You didn't pass any command to reload.`);
-        const commandName = args[0].toLowerCase();
+		if (!args) return message.channel.send(`You didn't pass any command to reload.`);
+        const commandName = args.toLowerCase();
         const command = message.client.commands.get(commandName)
             || message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
@@ -18,6 +18,6 @@ module.exports = {
             console.log(error);
             message.channel.send(`There was an error while reloading the command:\n\`${error.message}\``);
         }
-        
+
 	},
 };
