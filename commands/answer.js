@@ -27,8 +27,9 @@ module.exports = {
                     embed.setColor("#DD1100");
                     if (err || error == "true") {
                         embed.setDescription("An error occured.");
-                    } else if (!success || !pod) {
-                        embed.setDescription("WolframAlpha cannot interpret that question.");
+                    } else if (success == "false" || !pod) {
+                        embed.setTitle(`“${query}”`);
+                        embed.setDescription("Wolfram Alpha has not got any answers for your question.");
                     } else {
                         const result = {};
                         pod.forEach(pod => result[pod["$"].title] = {text: pod.subpod[0].plaintext[0], img: pod.subpod[0].img[0]});
@@ -37,20 +38,22 @@ module.exports = {
                         const answer = result[titles[1]];
                         embed.setTitle(`${titles[0]}: ${question.text}`);
                         if (answer) {
+                            embed.setAuthor(titles[1], "http://www.andyh.org/barthes/wolfram-alpha.png", `https://www.wolframalpha.com/input/?i=${encoded_query}`);
                             if (answer.text) {
-                                embed.setDescription(`${titles[1]}: ${answer.text}`);
+                                embed.setDescription(answer.text);
                             } else if (answer.img) {
-                                const {alt, src} = answer.img["$"];
-                                if (alt) {
-                                    embed.setDescription(`${alt}:`);
-                                }
+                                const {src} = answer.img["$"];
                                 if (src) {
                                     embed.setImage(src);
                                 }
                             }
                         }
-                        embed.setURL(`https://www.wolframalpha.com/input/?i=${encoded_query}`);
-                        embed.setFooter("WolframAlpha", "http://www.andyh.org/barthes/wolfram-alpha.png");
+                        if(result["Image"]) {
+                            const {src} = result["Image"].img["$"];
+                            embed.setThumbnail(src);
+                        }
+                        embed.setTimestamp(Date.now());
+                        embed.setFooter("Answer courtesy of Wolfram Alpha LLC");
                     }
                     message.channel.send(embed);
                 });
