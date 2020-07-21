@@ -11,24 +11,48 @@ module.exports = {
             message.channel.send(`You didn't ask anything.`);
             return;
         }
-        const url = `http://api.wolframalpha.com/v2/query?input=${encodeURIComponent(query)}&appid=${wolfram_app_id}`;
+        const encoded_query = encodeURIComponent(query);
+        const url = `http://api.wolframalpha.com/v2/query?input=${encoded_query}&appid=${wolfram_app_id}`;
         http.get(url, (resp) => {
-            if (resp.statusCode != 200) return;
+            if (resp.statusCode != 200) {
+                return;
+            }
             let xml = "";
             resp.on("data", chunk => xml += chunk);
             resp.on("end", () => {
                 parseString(xml, (err, json) => {
-                    if (err || json.queryresult["$"].error == "true" || !json.queryresult.pod) {
-                        return;
-                    }
-                    json.queryresult.pod.forEach(pod => {
-                        if (pod["$"].title == "Result") {
-                            const embed = new MessageEmbed()
-                                .setTitle(query)
-                                .setDescription(`${pod.subpod[0].plaintext[0]}`);
-                            message.channel.send(embed);
+                    const {error, success} = json.queryresult["$"];
+                    const {pod} = json.queryresult;
+                    const embed = new MessageEmbed();
+                    embed.setColor("#DD1100");
+                    if (err || error == "true") {
+                        embed.setDescription("An error occured.");
+                    } else if (!success || !pod) {
+                        embed.setDescription("WolframAlpha cannot interpret that question.");
+                    } else {
+                        const result = {};
+                        pod.forEach(pod => result[pod["$"].title] = {text: pod.subpod[0].plaintext[0], img: pod.subpod[0].img[0]});
+                        const titles = Object.keys(result);
+                        const question = result[titles[0]];
+                        const answer = result[titles[1]];
+                        embed.setTitle(`${titles[0]}: ${question.text}`);
+                        if (answer) {
+                            if (answer.text) {
+                                embed.setDescription(`${titles[1]}: ${answer.text}`);
+                            } else if (answer.img) {
+                                const {alt, src} = answer.img["$"];
+                                if (alt) {
+                                    embed.setDescription(`${alt}:`);
+                                }
+                                if (src) {
+                                    embed.setImage(src);
+                                }
+                            }
                         }
-                    });
+                        embed.setURL(`https://www.wolframalpha.com/input/?i=${encoded_query}`);
+                        embed.setFooter("WolframAlpha", "http://www.andyh.org/barthes/wolfram-alpha.png");
+                    }
+                    message.channel.send(embed);
                 });
             });
         });
